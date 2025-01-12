@@ -1,5 +1,5 @@
 <script setup>
-import SudokuBoard from './components/SudokuBoard.vue';
+import SudokuBoard from './components/old/SudokuBoard.vue';
 </script>
 
 <template>
@@ -12,7 +12,6 @@ import SudokuBoard from './components/SudokuBoard.vue';
 <style scoped>
 	.game-space {
 		display: flex;
-
 		justify-content: center;
 	}
 </style>
