@@ -14,6 +14,14 @@ const props = defineProps({
     childIndex: {
         type: Number,
         required: true,
+    },
+    selectionMode: {
+        type: String,
+        required: true
+    },
+    numberSelection: {
+        type: String,
+        required: true,
     }
 });
 
@@ -37,9 +45,6 @@ const candidateNumbers = reactive({
     "9": false,
 });
 
-// Switch between normal mode and candidate mode
-const isNormalMode = ref(true);
-
 // References to the DOM elements
 const candidateGrid = ref(null);
 const chosenBox = ref(null);
@@ -60,7 +65,7 @@ const cellIndexMapping = {
 const handleNormalMode = (key) => {
     if (/^[1-9]$/.test(key)) {
         chosenNumber.value = key;
-    } else if (key === "Backspace" || key === "Delete") {
+    } else if (key === "Backspace" || key === "Delete" || key === "") {
         chosenNumber.value = "";
     }
 
@@ -76,13 +81,17 @@ const handleCandidateMode = (key) => {
     if (/^[1-9]$/.test(key)) {
         chosenNumber.value = "";
         candidateNumbers[key] = !candidateNumbers[key];
+    } else if (key === "Backspace" || key === "Delete" || key === "") {
+        for (let i = 1; i <= 9; i++) {
+            candidateNumbers[i] = false;
+        }
     }
 };
 
 const handleKeyBoardPress = (e) => {
     const key = e.key;
 
-    if (isNormalMode.value) {
+    if (props.selectionMode === 'normal') {
         handleNormalMode(key);
     } else {
         handleCandidateMode(key);
@@ -90,9 +99,6 @@ const handleKeyBoardPress = (e) => {
 };
 
 const handleMouseClick = (e, number) => {
-    console.log("clicked on " + number);
-    console.log(isSelected.value);
-
     if (isSelected.value) {
         candidateNumbers[number] = !candidateNumbers[number];
     }
@@ -111,7 +117,17 @@ watch(chosenNumber,
     {
     flush: "post",
     }
-);  
+);
+
+watch(() => props.numberSelection, () => {
+    if (isSelected.value) {
+        if (props.selectionMode === 'normal') {
+            handleNormalMode(props.numberSelection);
+        } else {
+            handleCandidateMode(props.numberSelection);
+        }
+    }
+});
 
 </script>
 

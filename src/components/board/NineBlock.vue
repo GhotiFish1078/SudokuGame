@@ -16,6 +16,14 @@ const props = defineProps({
     parentIndex: {
         type: Number,
         required: true,
+    },
+    selectionMode: {
+        type: String,
+        required: true,
+    },
+    numberSelection: {
+        type: String,
+        required: true,
     }
 });
 
@@ -28,7 +36,7 @@ const isSelected = ref(false);
 <template>
     <div class="nine-block" >
         <template v-for="(i, index) in 9">
-            <EditableSudokuCell v-if="!props.values[index]" v-bind="{'selected-cell': selectedCell, 'parent-index': parentIndex, 'child-index': index}" v-on:cell-click="(e) => emit('reEmitEvent', e)" v-on:number-entered="(e) => emit('reEmitNumber', e)"/>
+            <EditableSudokuCell v-if="!props.values[index]" v-bind="{'selected-cell': selectedCell, 'parent-index': parentIndex, 'child-index': index, 'selection-mode': selectionMode, 'number-selection': numberSelection }" v-on:cell-click="(e) => emit('reEmitEvent', e)" v-on:number-entered="(e) => emit('reEmitNumber', e)"/>
             <NonEditableSudokuCell v-else v-bind="{'cell-number': props.values[index]}"/>
         </template>
     </div>

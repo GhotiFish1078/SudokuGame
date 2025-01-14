@@ -1,6 +1,8 @@
 <script setup>
 import { reactive, ref } from 'vue';
 import NineBlock from './NineBlock.vue';
+import SelectionArea from '../misc/SelectionArea.vue';
+import SubmissionSpace from '../misc/SubmissionSpace.vue';
 
 let puzzleBoard = [];
 let solutionBoard = [];
@@ -11,9 +13,15 @@ const playerBoard = ref([]);
 const nineBlocks = ref([]);
 
 // -1: No selected cell initially
-const selectedCell = reactive({parent: -1, child: -1});
+const selectedCell = reactive({ parent: -1, child: -1 });
+
+// normal by default
+const selectionMode = ref("normal");
+const numberSelection = ref(''); 
 
 const isLoading = ref(true);
+
+const isSolved = ref(false);
 
 const createNineBlocks = () => {
     nineBlocks.value = [];
@@ -34,6 +42,7 @@ const createNineBlocks = () => {
 };
 
 const fetchPuzzle = async () => {
+    isLoading.value = true;
     try {
         const response = await fetch("https://sudoku-api.vercel.app/api/dosuku");
         if (!response.ok) {
@@ -50,12 +59,7 @@ const fetchPuzzle = async () => {
 
         // Create the nineBlocks
         createNineBlocks();
-
-        console.log("Puzzle Board:", puzzleBoard);
-        console.log("Solution Board:", solutionBoard);
-        console.log("Difficulty:", difficulty);
     } catch (e) {
-        console.log("An error occurred" + e.message);
     } finally {
         isLoading.value = false;
     }
@@ -68,10 +72,33 @@ const updateChosenCell = (e) => {
 
 const updatePlayerBoard = (e) => {
     const number = e.number === '' ? 0 : parseInt(e.number, 10);
-    console.log(e.row);
-    console.log(e.col);
     playerBoard.value[e.row][e.col] = number;
-    console.log(playerBoard.value);
+};
+
+const handleSelectionChoice = (selection) => {
+    numberSelection.value = selection;
+};
+
+const handleSelectionMode = (mode) => {
+    selectionMode.value = mode;
+};
+
+const checkBoard = () => {
+    for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
+            if (playerBoard.value[i][j] !== solutionBoard[i][j]) {
+                isSolved.value = false;
+                return;
+            }
+        }
+    }
+
+    isSolved.value = true;
+};
+
+const resetBoard = () => {
+    playerBoard.value = JSON.parse(JSON.stringify(puzzleBoard));
+    createNineBlocks();
 };
 
 fetchPuzzle();
@@ -81,14 +108,40 @@ fetchPuzzle();
 <template>
     <div v-if="isLoading">
     </div>
-    <div v-else class="sudoku-board-two">
-        <template v-for="(i, index) in 9">
-            <NineBlock v-bind="{ values: nineBlocks[index], 'selected-cell': selectedCell, 'parent-index': index }" v-on:re-emit-event="updateChosenCell" v-on:re-emit-number="updatePlayerBoard"/>
-        </template>
+    
+    <div v-else-if="!isLoading && !isSolved" class="play-area">
+        <div class="sudoku-board-two">
+            <template v-for="(i, index) in 9">
+                <NineBlock v-bind="{ values: nineBlocks[index], 'selected-cell': selectedCell, 'parent-index': index, 'selection-mode': selectionMode, 'number-selection': numberSelection }" v-on:re-emit-event="updateChosenCell" v-on:re-emit-number="updatePlayerBoard"/>
+            </template>
+        </div>
+        <div class="submission-space">
+            <SubmissionSpace v-on:submit="checkBoard()" v-on:new-puzzle="fetchPuzzle()"/>
+        </div>
     </div>
+    <div v-else-if="isSolved" class="solved">
+        Congratulations! You solved the puzzle!
+    </div>
+    
 </template>
 
 <style scoped>
+.play-area {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    width: 50%;
+}
+
+.selection-keyboard {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 6;
+}
+
 .sudoku-board-two {
     display: grid;
     grid-template-rows: repeat(3, 1fr);
@@ -103,6 +156,17 @@ fetchPuzzle();
 
     gap: 3px;
     background-color: black;
+
+    flex: 6;
+    max-width: 70%;
+}
+
+.solved {
+    font-family: "ZCOOL XiaoWei", serif;
+    font-weight: 400;
+    font-style: normal;
+    text-align: center;
+    font-size: 3vh;
 }
 
 </style>
